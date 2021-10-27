@@ -1,45 +1,9 @@
 import React, {useCallback, useState, useMemo} from "react";
-import { createEditor, Node, Transforms, Editor as SlateEditor } from "slate";
-import { Link } from "@material-ui/core";
-import {
-    Editable,
-    withReact,
-    Slate,
-    RenderElementProps,
-    RenderLeafProps,
-} from "slate-react";
-
-import { DefaultElement } from "./elements";
+import { createEditor, Node, Transforms} from "slate";
+import {Editable, withReact, Slate, ReactEditor} from "slate-react";
 import { Toolbar } from "./Toolbar";
-
-function renderElement(props: RenderElementProps) {
-    const { attributes, children } = props;
-
-    return <DefaultElement {...attributes}>{children}</DefaultElement>;
-}
-
-const textTypes = {
-    link: (props) => <Link underline="hover" {...props} />,
-    bold: (props) => <b {...props} />,
-    italics: (props) => <i {...props} />,
-    underline: (props) => <u {...props} />,
-};
-
-function renderLeaf(props: RenderLeafProps) {
-    const { attributes, leaf, children } = props;
-
-    return (
-        <span {...attributes}>
-      {Object.keys(textTypes).reduce((acc, curr) => {
-          if (!leaf[curr]) return acc;
-          const NodeType = textTypes[curr];
-          const props = leaf[curr];
-
-          return <NodeType {...props}>{acc}</NodeType>;
-      }, children)}
-    </span>
-    );
-}
+import {renderLeaf} from "./elements";
+import {renderElement} from "./elements";
 
 export interface EditorProps {
     value: Node[];
@@ -52,23 +16,25 @@ export interface EditorProps {
 export function Editor({value, onChange, ...props}: EditorProps) {
     const editor = useMemo(() => withReact(createEditor()), []);
 
+    // I am casting here because Popper types anchorElement as a more general type (ReferenceObject)
+    // instead of what getBoundingClientRect Provides (DomRect) I could look more into this,
+    // but I will let it rest since my config could have also messed this up.
     const [anchorEl, setAnchorEl] = useState<any>();
     const [open, setOpen] = useState(false);
 
     const setSelectionBoundingBox = useCallback((e) => {
-        console.log(e);
         // since this is called on key down I want to return early on non arrow keys
         // since 16 and 93 are included since command + shift + arrow keys is not firing arrow key events :)
         if(e.keyCode && ![16,33,34,35,36,37,38,39,40,93].includes(e.keyCode)) return;
 
         const selection = window.getSelection();
 
-        if(!selection) return;
+        if (!selection) return;
 
         const domRect = selection.getRangeAt(0).getBoundingClientRect()
 
-        // if the selected bounding box is not big enough don't show
-        if(domRect.width < 5){
+        // if the selected bounding box is not big enough don't show the toolbar
+        if (domRect.width < 3) {
             setOpen(false);
         } else {
             setOpen(true);
@@ -86,10 +52,10 @@ export function Editor({value, onChange, ...props}: EditorProps) {
     // `Transform.select` wasn't working there for some reason. That's when I found the above!
     const savedSelection = React.useRef(editor.selection);
     const onFocus = React.useCallback(() => {
-        if (!editor.selection) {
+        if (savedSelection.current !== null) {
             Transforms.select(
                 editor,
-                savedSelection.current ?? SlateEditor.end(editor, []),
+                savedSelection.current
             );
         }
     }, [editor]);

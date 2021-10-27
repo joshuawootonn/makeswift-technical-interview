@@ -46,16 +46,16 @@ const useStyles = makeStyles((theme) => ({
 
 
 // this is an adaption from examples I found in react-slate docs
-const toggleMark = (editor: ReactEditor, action: ToolbarActions, props = {}) => {
+const toggleMark = (editor: ReactEditor, format: FormatType, props = {}) => {
     // I think casting at your limits like this is okish!
-    const marks = Editor.marks(editor) as { [key in ToolbarActions]: any };
+    const marks = Editor.marks(editor) as { [key in FormatType]: any };
     if (!marks) return;
-    return marks[action]
-        ? Editor.removeMark(editor, action)
-        : Editor.addMark(editor, action, props);
+    return marks[format]
+        ? Editor.removeMark(editor, format)
+        : Editor.addMark(editor, format, props);
 };
 
-export function ToolbarAction(props: IconButtonProps) {
+export function ToolbarButton(props: IconButtonProps) {
     const s = useStyles();
     return (
         <IconButton
@@ -67,21 +67,21 @@ export function ToolbarAction(props: IconButtonProps) {
     )
 }
 
-type ToolbarActions = 'bold' | 'italics' | 'underline' | 'link'
+type FormatType = 'bold' | 'italics' | 'underline' | 'link'
 
-interface SimpleToolbarActionProps extends IconButtonProps {
-    toolbarAction: ToolbarActions
+interface SimpleToolbarButtonProps extends IconButtonProps {
+    format: FormatType
 }
 
-export function SimpleToolbarAction({toolbarAction, ...props}: SimpleToolbarActionProps) {
+export function SimpleToolbarButton({format, ...props}: SimpleToolbarButtonProps) {
     const editor = useEditor();
     return (
-        <ToolbarAction
+        <ToolbarButton
             {...props}
             onClick={(x: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
                 x.preventDefault();
                 ReactEditor.focus(editor);
-                toggleMark(editor, toolbarAction);
+                toggleMark(editor, format);
             }}
         />
     )
@@ -109,29 +109,29 @@ export function Toolbar(props: ToolbarProps) {
                         animate={{x: 0, opacity: 1}}
                         exit={{x: -100, opacity: 0}}
                     >
-                        <SimpleToolbarAction
-                            toolbarAction={'bold'}
+                        <SimpleToolbarButton
+                            format={'bold'}
                         >
                             <FormatBold fontSize="small"/>
-                        </SimpleToolbarAction>
-                        <SimpleToolbarAction
-                            toolbarAction={'italics'}
+                        </SimpleToolbarButton>
+                        <SimpleToolbarButton
+                            format={'italics'}
                         >
                             <FormatItalic fontSize="small"/>
-                        </SimpleToolbarAction>
-                        <SimpleToolbarAction
-                            toolbarAction={'underline'}
+                        </SimpleToolbarButton>
+                        <SimpleToolbarButton
+                            format={'underline'}
                         >
                             <FormatUnderlined fontSize="small"/>
-                        </SimpleToolbarAction>
-                        <ToolbarAction
+                        </SimpleToolbarButton>
+                        <ToolbarButton
                             onClick={(x) => {
                                 x.preventDefault();
                                 setLink("");
                             }}
                         >
                             <Link fontSize="small"/>
-                        </ToolbarAction>
+                        </ToolbarButton>
                     </ButtonGroup>
                 ) : (
                     /* URL input field */
