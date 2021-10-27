@@ -56,21 +56,26 @@ export function Editor({value, onChange, ...props}: EditorProps) {
     const [open, setOpen] = useState(false);
 
     const setSelectionBoundingBox = useCallback((e) => {
+        // console.log(e);
+        // since this is called on key down I want to return early on non arrow keys
+        // since 16 and 93 are included since command + shift + arrow keys is not firing arrow key events :)
+        if(e.keyCode && ![16,33,34,35,36,37,38,39,40,93].includes(e.keyCode)) return;
+
         const selection = window.getSelection();
 
-        // Resets when the selection has a length of 0
-        if (!selection || selection.anchorOffset === selection.focusOffset) {
+        if(!selection) return;
+
+        const domRect = selection.getRangeAt(0).getBoundingClientRect()
+
+        // if the selected bounding box is not big enough don't show
+        if(domRect.width < 5){
             setOpen(false);
-            return;
+        } else {
+            setOpen(true);
+            setAnchorEl({
+                getBoundingClientRect: () => domRect
+            });
         }
-
-        const getBoundingClientRect = () =>
-            selection.getRangeAt(0).getBoundingClientRect();
-
-        setOpen(true);
-        setAnchorEl({
-            getBoundingClientRect
-        } as any);
 
         return true;
     }, [editor])
@@ -81,10 +86,10 @@ export function Editor({value, onChange, ...props}: EditorProps) {
     // `Transform.select` wasn't working there for some reason. That's when I found the above!
     const savedSelection = React.useRef(editor.selection);
     const onFocus = React.useCallback(() => {
-        if (!editor.selection) {
+        if(savedSelection.current){
             Transforms.select(
                 editor,
-                savedSelection.current ?? SlateEditor.end(editor, []),
+                savedSelection.current,
             );
         }
     }, [editor]);
@@ -101,6 +106,7 @@ export function Editor({value, onChange, ...props}: EditorProps) {
                 onFocus={onFocus}
                 onBlur={onBlur}
                 onMouseUp={setSelectionBoundingBox}
+                onKeyUp={setSelectionBoundingBox}
                 {...props}
             />
         </Slate>

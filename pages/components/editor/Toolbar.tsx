@@ -1,4 +1,4 @@
-import React  from "react";
+import React, {useEffect} from "react";
 import {
     Popper,
     PopperProps,
@@ -91,6 +91,31 @@ export function Toolbar(props: ToolbarProps) {
     const [link, setLink] = React.useState<null | string>(null);
     const s = useStyles();
 
+
+    // useEffect(() => {
+    //     function logselect (e) {
+    //
+    //
+    //         console.log('keypress')
+    //     }
+    //     function logselectstart () {
+    //         console.log('selectstart')
+    //     }
+    //     function logselectionchange () {
+    //         console.log('selectionchange')
+    //     }
+    //     document.addEventListener('keydown',logselect )
+    //     document.addEventListener('selectstart', logselectstart)
+    //     document.addEventListener('selectionchange', logselectionchange)
+    //
+    //     return () => {
+    //         document.removeEventListener('keypress',logselect )
+    //         document.removeEventListener('selectstart', logselectstart)
+    //         document.removeEventListener('selectionchange', logselectionchange)
+    //     }
+    // })
+
+
     return (
         <Popper className={s.root} {...props}>
             {link === null ? (
@@ -112,7 +137,8 @@ export function Toolbar(props: ToolbarProps) {
                         <FormatUnderlined fontSize="small" />
                     </SimpleToolbarAction>
                     <ToolbarAction
-                        onClick={() => {
+                        onClick={(x) => {
+                            x.preventDefault();
                             setLink("");
                         }}
                     >
@@ -138,7 +164,8 @@ export function Toolbar(props: ToolbarProps) {
                             <Close
                                 className={s.close}
                                 fontSize="small"
-                                onClick={() => {
+                                onClick={(x) => {
+                                    x.preventDefault();
                                     setLink(null);
                                     ReactEditor.focus(editor);
                                 }}
