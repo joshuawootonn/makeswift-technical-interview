@@ -3,8 +3,7 @@ import {
     Popper,
     PopperProps,
     ButtonGroup,
-    IconButton,
-    Input,
+    Input, IconButtonProps, IconButton,
 } from "@material-ui/core";
 import {
     FormatBold,
@@ -14,8 +13,8 @@ import {
     Close,
 } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
-import { Editor } from "slate";
 import { useEditor, ReactEditor } from "slate-react";
+import {Editor} from "slate";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -43,26 +42,51 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export interface ToolbarProps extends Omit<PopperProps, "children"> {}
 
-type Format = 'bold' | 'italics' | 'underline' | 'link'
-
-// this is an addaption from examples I found in react-slate docs
-const toggleMark = (editor: ReactEditor, format: Format, props = {}) => {
+// this is an adaption from examples I found in react-slate docs
+const toggleMark = (editor: ReactEditor, action: ToolbarActions, props = {}) => {
     const marks = Editor.marks(editor);
     if (!marks) return;
-    return marks[format]
-        ? Editor.removeMark(editor, format)
-        : Editor.addMark(editor, format, props);
+    return marks[action]
+        ? Editor.removeMark(editor, action)
+        : Editor.addMark(editor, action, props);
 };
 
-// admittedly it's probably risky to use partial applicaiton in a technical interview
-// gotta have fun though :)
-const createFormatHandler = (editor: ReactEditor, format: Format) => (x: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    x.preventDefault();
-    ReactEditor.focus(editor);
-    toggleMark(editor, format);
-};
+export function ToolbarAction(props: IconButtonProps) {
+    const s = useStyles();
+    return (
+        <IconButton
+            className={s.button}
+            size="small"
+            {...props}
+        >
+            <FormatBold fontSize="small" />
+        </IconButton>
+    )
+}
+
+type ToolbarActions = 'bold' | 'italics' | 'underline' | 'link'
+
+interface SimpleToolbarActionProps extends IconButtonProps {
+    toolbarAction: ToolbarActions
+}
+
+export function SimpleToolbarAction({toolbarAction, ...props}: SimpleToolbarActionProps) {
+    const editor = useEditor();
+    return (
+        <ToolbarAction
+            {...props}
+            onClick={(x: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+                x.preventDefault();
+                ReactEditor.focus(editor);
+                toggleMark(editor, toolbarAction);
+            }}
+        />
+    )
+}
+
+
+export interface ToolbarProps extends Omit<PopperProps, "children"> {}
 
 export function Toolbar(props: ToolbarProps) {
     const editor = useEditor();
@@ -74,36 +98,28 @@ export function Toolbar(props: ToolbarProps) {
             {link === null ? (
                 /* Formatting controls */
                 <ButtonGroup variant="text" color="primary">
-                    <IconButton
-                        className={s.button}
-                        size="small"
-                        onClick={createFormatHandler(editor, "bold")}
+                    <SimpleToolbarAction
+                        toolbarAction={'bold'}
                     >
                         <FormatBold fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                        className={s.button}
-                        size="small"
-                        onClick={createFormatHandler(editor, "italics")}
+                    </SimpleToolbarAction>
+                    <SimpleToolbarAction
+                        toolbarAction={'italics'}
                     >
                         <FormatItalic fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                        className={s.button}
-                        size="small"
-                        onClick={createFormatHandler(editor, "underline")}
+                    </SimpleToolbarAction>
+                    <SimpleToolbarAction
+                        toolbarAction={'underline'}
                     >
                         <FormatUnderlined fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                        className={s.button}
-                        size="small"
+                    </SimpleToolbarAction>
+                    <ToolbarAction
                         onClick={() => {
                             setLink("");
                         }}
                     >
                         <Link fontSize="small" />
-                    </IconButton>
+                    </ToolbarAction>
                 </ButtonGroup>
             ) : (
                 /* URL input field */
