@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useMemo, useEffect } from "react";
+import React, {useCallback, useState, useMemo} from "react";
 import { createEditor, Node, Transforms, Editor as SlateEditor } from "slate";
 import { Link } from "@material-ui/core";
 import {
@@ -49,39 +49,31 @@ export interface EditorProps {
     spellCheck?: boolean;
 }
 
-export function Editor(props: EditorProps) {
-    const { value, onChange, ...other } = props;
+export function Editor({value, onChange, ...props}: EditorProps) {
     const editor = useMemo(() => withReact(createEditor()), []);
 
-    const [selectionBoundingBox, _setSelectionBoundingBox] = useState(null);
-    const [isToolbarOpen, setIsToolbarOpen] = useState(false);
+    const [anchorEl, setAnchorEl] = useState<any>();
+    const [open, setOpen] = useState(false);
 
-    const setSelectionBoundingBox = useCallback(() => {
+    const setSelectionBoundingBox = useCallback((e) => {
         const selection = window.getSelection();
-
-        console.log(selection);
 
         // Resets when the selection has a length of 0
         if (!selection || selection.anchorOffset === selection.focusOffset) {
-            _setSelectionBoundingBox(null);
-            setIsToolbarOpen(false);
+            setOpen(false);
+            return;
         }
 
         const getBoundingClientRect = () =>
             selection.getRangeAt(0).getBoundingClientRect();
 
-        _setSelectionBoundingBox({
-            getBoundingClientRect,
-        });
-        setIsToolbarOpen(true);
-    }, []);
+        setOpen(true);
+        setAnchorEl({
+            getBoundingClientRect
+        } as any);
 
-    useEffect(() => {
-        document.addEventListener("selectionchange", setSelectionBoundingBox);
-        return () => {
-            document.removeEventListener("selectionchange", setSelectionBoundingBox);
-        };
-    }, [setSelectionBoundingBox]);
+        return true;
+    }, [editor])
 
     //  https://github.com/ianstormtaylor/slate/issues/3412#issuecomment-730002475
     // These lines are pretty much c/p from the github issue I found on the topic above
@@ -102,13 +94,14 @@ export function Editor(props: EditorProps) {
 
     return (
         <Slate editor={editor} value={value} onChange={onChange}>
-            <Toolbar open={isToolbarOpen} anchorEl={selectionBoundingBox} />
+            <Toolbar open={open} anchorEl={anchorEl} />
             <Editable
                 renderElement={renderElement}
                 renderLeaf={renderLeaf}
                 onFocus={onFocus}
                 onBlur={onBlur}
-                {...other}
+                onMouseUp={setSelectionBoundingBox}
+                {...props}
             />
         </Slate>
     );

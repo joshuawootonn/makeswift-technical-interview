@@ -14,8 +14,8 @@
     "next": "12.0.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
-    "slate": "0.58.3",
-    "slate-react": "0.58.3"
+    "slate": "^0.66.5",
+    "slate-react": "^0.69.0"
   },
   "devDependencies": {
     "@types/node": "16.11.6",

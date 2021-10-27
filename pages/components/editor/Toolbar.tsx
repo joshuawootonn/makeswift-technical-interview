@@ -26,8 +26,7 @@ const useStyles = makeStyles((theme) => ({
         "&:hover": {
             opacity: 1,
         },
-        paddingTop: 8,
-        paddingBottom: 8,
+        padding: 8,
     },
     input: {
         color: theme.palette.common.white,
@@ -42,10 +41,10 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-
 // this is an adaption from examples I found in react-slate docs
 const toggleMark = (editor: ReactEditor, action: ToolbarActions, props = {}) => {
-    const marks = Editor.marks(editor);
+    // I think casting at your limits like this is okish!
+    const marks = Editor.marks(editor) as {[key in ToolbarActions]: any};
     if (!marks) return;
     return marks[action]
         ? Editor.removeMark(editor, action)
@@ -56,12 +55,11 @@ export function ToolbarAction(props: IconButtonProps) {
     const s = useStyles();
     return (
         <IconButton
+            {...props}
             className={s.button}
             size="small"
-            {...props}
-        >
-            <FormatBold fontSize="small" />
-        </IconButton>
+
+            />
     )
 }
 
