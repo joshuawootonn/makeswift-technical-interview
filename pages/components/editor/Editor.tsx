@@ -56,7 +56,7 @@ export function Editor({value, onChange, ...props}: EditorProps) {
     const [open, setOpen] = useState(false);
 
     const setSelectionBoundingBox = useCallback((e) => {
-        // console.log(e);
+        console.log(e);
         // since this is called on key down I want to return early on non arrow keys
         // since 16 and 93 are included since command + shift + arrow keys is not firing arrow key events :)
         if(e.keyCode && ![16,33,34,35,36,37,38,39,40,93].includes(e.keyCode)) return;
@@ -86,10 +86,10 @@ export function Editor({value, onChange, ...props}: EditorProps) {
     // `Transform.select` wasn't working there for some reason. That's when I found the above!
     const savedSelection = React.useRef(editor.selection);
     const onFocus = React.useCallback(() => {
-        if(savedSelection.current){
+        if (!editor.selection) {
             Transforms.select(
                 editor,
-                savedSelection.current,
+                savedSelection.current ?? SlateEditor.end(editor, []),
             );
         }
     }, [editor]);

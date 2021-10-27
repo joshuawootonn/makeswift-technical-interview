@@ -12,13 +12,16 @@ import {
     Link,
     Close,
 } from "@material-ui/icons";
-import { makeStyles } from "@material-ui/core/styles";
-import { useEditor, ReactEditor } from "slate-react";
+import {makeStyles} from "@material-ui/core/styles";
+import {useEditor, ReactEditor} from "slate-react";
 import {Editor} from "slate";
+import {AnimatePresence, motion} from "framer-motion";
 
 const useStyles = makeStyles((theme) => ({
     root: {
         background: theme.palette.common.black,
+        borderRadius: 8,
+        padding: 2,
     },
     button: {
         color: theme.palette.common.white,
@@ -41,10 +44,11 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
+
 // this is an adaption from examples I found in react-slate docs
 const toggleMark = (editor: ReactEditor, action: ToolbarActions, props = {}) => {
     // I think casting at your limits like this is okish!
-    const marks = Editor.marks(editor) as {[key in ToolbarActions]: any};
+    const marks = Editor.marks(editor) as { [key in ToolbarActions]: any };
     if (!marks) return;
     return marks[action]
         ? Editor.removeMark(editor, action)
@@ -59,7 +63,7 @@ export function ToolbarAction(props: IconButtonProps) {
             className={s.button}
             size="small"
 
-            />
+        />
     )
 }
 
@@ -84,100 +88,88 @@ export function SimpleToolbarAction({toolbarAction, ...props}: SimpleToolbarActi
 }
 
 
-export interface ToolbarProps extends Omit<PopperProps, "children"> {}
+export interface ToolbarProps extends Omit<PopperProps, "children"> {
+}
 
 export function Toolbar(props: ToolbarProps) {
     const editor = useEditor();
     const [link, setLink] = React.useState<null | string>(null);
     const s = useStyles();
 
-
-    // useEffect(() => {
-    //     function logselect (e) {
-    //
-    //
-    //         console.log('keypress')
-    //     }
-    //     function logselectstart () {
-    //         console.log('selectstart')
-    //     }
-    //     function logselectionchange () {
-    //         console.log('selectionchange')
-    //     }
-    //     document.addEventListener('keydown',logselect )
-    //     document.addEventListener('selectstart', logselectstart)
-    //     document.addEventListener('selectionchange', logselectionchange)
-    //
-    //     return () => {
-    //         document.removeEventListener('keypress',logselect )
-    //         document.removeEventListener('selectstart', logselectstart)
-    //         document.removeEventListener('selectionchange', logselectionchange)
-    //     }
-    // })
-
-
     return (
-        <Popper className={s.root} {...props}>
-            {link === null ? (
-                /* Formatting controls */
-                <ButtonGroup variant="text" color="primary">
-                    <SimpleToolbarAction
-                        toolbarAction={'bold'}
+        <Popper className={s.root} placement={'top'}  {...props}>
+            <AnimatePresence exitBeforeEnter={true}>
+                {link === null ? (
+                    /* Formatting controls */
+                    <ButtonGroup
+                        variant="text"
+                        color="primary"
+                        component={motion.div}
+                        initial={{x: 100, opacity: 0}}
+                        animate={{x: 0, opacity: 1}}
+                        exit={{x: -100, opacity: 0}}
                     >
-                        <FormatBold fontSize="small" />
-                    </SimpleToolbarAction>
-                    <SimpleToolbarAction
-                        toolbarAction={'italics'}
-                    >
-                        <FormatItalic fontSize="small" />
-                    </SimpleToolbarAction>
-                    <SimpleToolbarAction
-                        toolbarAction={'underline'}
-                    >
-                        <FormatUnderlined fontSize="small" />
-                    </SimpleToolbarAction>
-                    <ToolbarAction
-                        onClick={(x) => {
+                        <SimpleToolbarAction
+                            toolbarAction={'bold'}
+                        >
+                            <FormatBold fontSize="small"/>
+                        </SimpleToolbarAction>
+                        <SimpleToolbarAction
+                            toolbarAction={'italics'}
+                        >
+                            <FormatItalic fontSize="small"/>
+                        </SimpleToolbarAction>
+                        <SimpleToolbarAction
+                            toolbarAction={'underline'}
+                        >
+                            <FormatUnderlined fontSize="small"/>
+                        </SimpleToolbarAction>
+                        <ToolbarAction
+                            onClick={(x) => {
+                                x.preventDefault();
+                                setLink("");
+                            }}
+                        >
+                            <Link fontSize="small"/>
+                        </ToolbarAction>
+                    </ButtonGroup>
+                ) : (
+                    /* URL input field */
+                    <motion.form
+                        onSubmit={(x) => {
                             x.preventDefault();
-                            setLink("");
+                            setLink(null);
+                            ReactEditor.focus(editor);
+                            toggleMark(editor, "link", {href: link});
                         }}
+                        initial={{x: 100, opacity: 0}}
+                        animate={{x: 0, opacity: 1}}
+                        exit={{x: -100, opacity: 0}}
                     >
-                        <Link fontSize="small" />
-                    </ToolbarAction>
-                </ButtonGroup>
-            ) : (
-                /* URL input field */
-                <form
-                    onSubmit={(x) => {
-                        x.preventDefault();
-                        setLink(null);
-                        ReactEditor.focus(editor);
-                        toggleMark(editor, "link", { href: link });
-                    }}
-                >
-                    <Input
-                        className={s.input}
-                        type="url"
-                        value={link}
-                        onChange={(x) => setLink(x.target.value)}
-                        endAdornment={
-                            <Close
-                                className={s.close}
-                                fontSize="small"
-                                onClick={(x) => {
-                                    x.preventDefault();
-                                    setLink(null);
-                                    ReactEditor.focus(editor);
-                                }}
-                            />
-                        }
-                        fullWidth
-                        placeholder="https://"
-                        disableUnderline
-                        autoFocus
-                    />
-                </form>
-            )}
+                        <Input
+                            className={s.input}
+                            type="url"
+                            value={link}
+                            onChange={(x) => setLink(x.target.value)}
+                            endAdornment={
+                                <Close
+                                    className={s.close}
+                                    fontSize="small"
+                                    onClick={(x) => {
+                                        x.preventDefault();
+                                        setLink(null);
+                                        ReactEditor.focus(editor);
+                                    }}
+                                />
+                            }
+                            fullWidth
+                            placeholder="https://"
+                            disableUnderline
+                            autoFocus
+                        />
+                    </motion.form>
+                )}
+            </AnimatePresence>
         </Popper>
     );
 }
